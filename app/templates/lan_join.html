@@ -1,11 +1,118 @@
-<!-- app/templates/lan_join.html -->
 {% extends "base.html" %}
 {% block content %}
-<h2>Join LAN Session (Receiver)</h2>
-<form method="POST">
-  <input name="username" placeholder="Session username" required><br><br>
-  <input name="password" placeholder="Session password" type="password" required><br><br>
-  <input name="otp" placeholder="OTP (from sender)" required><br><br>
-  <button type="submit">Join</button>
-</form>
+<style>
+.video-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(0, 20, 60, 0.85), rgba(0, 10, 30, 0.85));
+  z-index: -1;
+}
+
+/* Main Form Box */
+.form-wrap {
+  max-width: 480px;
+  margin: 140px auto;
+  padding: 25px 30px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
+}
+
+h2 {
+  text-align: center;
+  color: #0d1b3d;
+  font-weight: 700;
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+}
+
+/* Field styling */
+.field {
+  margin-bottom: 15px;
+}
+
+label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+  color: #222;
+}
+
+/* Input fields */
+input[type=text],
+input[type=password],
+input[type=number] {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  outline: none;
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 6px rgba(0, 123, 255, 0.4);
+}
+
+/* Button styling */
+button {
+  display: block;
+  width: 100%;
+  background: #007bff;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+  font-size: 0.95rem;
+}
+
+button:hover {
+  background: #0056b3;
+  transform: translateY(-2px);
+}
+</style>
+
+<video autoplay loop muted playsinline class="video-bg">
+  <source src="{{ url_for('static', filename='video/background.mp4') }}" type="video/mp4">
+</video>
+
+<div class="overlay"></div>
+
+<div class="form-wrap">
+  <h2>Join LAN Session (Receiver)</h2>
+  <form method="POST">
+    <div class="field">
+      <label>Session Username:</label>
+      <input name="username" placeholder="Session username" required>
+    </div>
+    <div class="field">
+      <label>Session Password:</label>
+      <input name="password" placeholder="Session password" type="password" required>
+    </div>
+    <div class="field">
+      <label>OTP (from sender):</label>
+      <input name="otp" placeholder="Enter OTP from sender" required>
+    </div>
+    <button type="submit">Join Session</button>
+  </form>
+</div>
 {% endblock %}
