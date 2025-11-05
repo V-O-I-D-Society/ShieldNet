@@ -1,16 +1,81 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Login</title>
+  <meta charset="UTF-8">
+  <title>Cyber Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at top, #00131f, #000);
+      font-family: 'Orbitron', sans-serif;
+      color: #00ffcc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .container {
+      text-align: center;
+      background: rgba(0, 40, 60, 0.8);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 255, 170, 0.5);
+      width: 320px;
+    }
+    h2 {
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px #00ffaa;
+    }
+    form p {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #00ffaa;
+      border-radius: 6px;
+      background: rgba(0, 20, 30, 0.8);
+      color: #00ffcc;
+      font-size: 1rem;
+      outline: none;
+    }
+    input:focus {
+      box-shadow: 0 0 10px #00ffaa;
+    }
+    input[type="submit"] {
+      background: linear-gradient(90deg, #00ffaa, #00ccff);
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      transition: 0.2s;
+    }
+    input[type="submit"]:hover {
+      box-shadow: 0 0 15px #00ffaa;
+      transform: scale(1.05);
+    }
+    a {
+      color: #00ffaa;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-  <h2>Login</h2>
-  <form method="POST" action="">
-    {{ form.hidden_tag() }}
-    <p>{{ form.email.label }}<br>{{ form.email(size=32) }}</p>
-    <p>{{ form.password.label }}<br>{{ form.password(size=32) }}</p>
-    <p>{{ form.submit() }}</p>
-  </form>
-  <p>Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign up</a></p>
+  <div class="container">
+    <form method="POST" action="">
+      {{ form.hidden_tag() }}
+      <p>{{ form.email.label }}<br>{{ form.email(size=32, placeholder="Enter email") }}</p>
+      <p>{{ form.password.label }}<br>{{ form.password(size=32, placeholder="Enter password") }}</p>
+      <p>{{ form.submit(class_="btn") }}</p>
+    </form>
+    <p>Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign up</a></p>
+  </div>
 </body>
 </html>
