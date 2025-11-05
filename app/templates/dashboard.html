@@ -1,44 +1,143 @@
 {% extends 'base.html' %}
 {% block content %}
-<div style="max-width:700px; margin:60px auto; text-align:center;">
+<style>
+body {
+  background: linear-gradient(145deg, #1e1e2f, #2d2d44);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: #ffffff;
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 
-  <!-- ✅ Mode Detection Banner -->
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.05), transparent 70%),
+              radial-gradient(circle at bottom right, rgba(0, 0, 0, 0.3), transparent 70%);
+  z-index: -1;
+}
+
+.dashboard-container {
+  max-width: 700px;
+  width: 90%;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.3),
+              -8px -8px 20px rgba(255, 255, 255, 0.05);
+  padding: 40px;
+  text-align: center;
+  transition: all 0.3s ease-in-out;
+}
+
+.dashboard-container:hover {
+  transform: translateY(-4px);
+  box-shadow: 10px 10px 25px rgba(0, 0, 0, 0.4),
+              -10px -10px 25px rgba(255, 255, 255, 0.07);
+}
+
+.mode-banner {
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 25px;
+  font-weight: 500;
+}
+
+.lan-mode {
+  background: linear-gradient(90deg, #a8e063, #56ab2f);
+  color: #103a00;
+}
+
+.online-mode {
+  background: linear-gradient(90deg, #89f7fe, #66a6ff);
+  color: #002850;
+}
+
+.transfer-options {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  text-decoration: none;
+  padding: 18px 32px;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3),
+              -2px -2px 5px rgba(255, 255, 255, 0.1);
+}
+
+.online-btn {
+  background: linear-gradient(135deg, #007bff, #0056d6);
+}
+
+.lan-btn {
+  background: linear-gradient(135deg, #28a745, #1f8a3b);
+}
+
+.btn:hover:not(.disabled-btn) {
+  transform: translateY(-4px);
+  box-shadow: 6px 6px 15px rgba(0, 0, 0, 0.4),
+              -3px -3px 7px rgba(255, 255, 255, 0.15);
+}
+
+.disabled-btn {
+  background: gray;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+</style>
+
+<div class="dashboard-container">
   {% if request.host.startswith('localhost') 
         or request.host.startswith('127.') 
         or request.host.startswith('192.168.') 
         or request.host.startswith('10.') %}
-    <div style="background:#d4edda; color:#155724; padding:12px; border-radius:10px; margin-bottom:25px;">
+    <div class="mode-banner lan-mode">
       🟢 You’re connected via <strong>LAN Mode</strong>
     </div>
   {% else %}
-    <div style="background:#cce5ff; color:#004085; padding:12px; border-radius:10px; margin-bottom:25px;">
+    <div class="mode-banner online-mode">
       🌐 You’re using <strong>Online Mode</strong>
     </div>
   {% endif %}
 
-  <h2>Welcome, {{ user.username }}!</h2>
   <p style="color:gray;">Select a method to share files:</p>
 
-  <div style="display:flex; justify-content:center; gap:30px; margin-top:40px;">
-    <!-- 🌐 Online Transfer (Always Available) -->
-    <a href="{{ url_for('online_transfer.index') }}"
-       style="background:#007bff; color:white; padding:20px 35px; border-radius:10px; text-decoration:none;">
-       🌐 Online Transfer
+  <div class="transfer-options">
+    <a href="{{ url_for('online_transfer.index') }}" class="btn online-btn">
+      🌐 Online Transfer
     </a>
 
-    <!-- 💻 LAN Transfer -->
     {% if request.host.startswith('localhost') 
           or request.host.startswith('127.') 
           or request.host.startswith('192.168.') 
           or request.host.startswith('10.') %}
-      <a href="{{ url_for('lan.create_session') }}"
-         style="background:#28a745; color:white; padding:20px 35px; border-radius:10px; text-decoration:none;">
-         💻 LAN Transfer
+      <a href="{{ url_for('lan.create_session') }}" class="btn lan-btn">
+        💻 LAN Transfer
       </a>
     {% else %}
-      <button disabled
-         style="background:gray; color:white; padding:20px 35px; border-radius:10px; border:none; cursor:not-allowed;">
-         💻 LAN Transfer (Unavailable Online)
+      <button class="btn disabled-btn" disabled>
+        💻 LAN Transfer (Unavailable Online)
       </button>
     {% endif %}
   </div>
