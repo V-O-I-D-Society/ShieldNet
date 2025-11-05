@@ -1,5 +1,115 @@
-{% extends 'base.html' %}
-{% block content %}
-<h2>Welcome to Secure File Transfer</h2>
-<p>Login or Register to start sharing files securely.</p>
-{% endblock %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ title or "Secure Transfer" }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script src="{{ url_for('static', filename='js/idle_logout.js') }}" defer></script>
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js" crossorigin="anonymous"></script>
+  <style>
+    /* Background blur motion style */
+    body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      background: radial-gradient(circle at 20% 20%, #001f3f, #000814);
+      font-family: "Poppins", sans-serif;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* glowing blur spots */
+    body::before,
+    body::after {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      filter: blur(150px);
+      opacity: 0.5;
+      z-index: 0;
+    }
+
+    body::before {
+      background: #0044ff;
+      top: -100px;
+      left: -100px;
+    }
+
+    body::after {
+      background: #00ffff;
+      bottom: -150px;
+      right: -150px;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 0;
+    }
+
+    .content-box {
+      text-align: center;
+      z-index: 1;
+      position: relative;
+    }
+
+    .content-box h2 {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+      text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .content-box p {
+      font-size: 1.2rem;
+      margin-bottom: 30px;
+      color: #cfd9e0;
+    }
+
+    .auth-links {
+      margin-top: 20px;
+    }
+
+    .auth-links a {
+      color: #fff;
+      margin: 0 10px;
+      text-decoration: none;
+      border: 1.5px solid #fff;
+      padding: 8px 20px;
+      border-radius: 25px;
+      transition: 0.3s ease;
+      font-weight: 600;
+    }
+
+    .auth-links a:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+
+  <div class="content-box">
+    <h2>Welcome to Secure File Transfer</h2>
+    <p>Login or Register to start sharing files securely.</p>
+
+    {% if current_user.is_authenticated %}
+      <div class="auth-links">
+        <a href="{{ url_for('auth.logout') }}">Logout</a>
+      </div>
+    {% else %}
+      <div class="auth-links">
+        <a href="{{ url_for('auth.login') }}">Login</a>
+        <a href="{{ url_for('auth.signup') }}">Signup</a>
+      </div>
+    {% endif %}
+  </div>
+</body>
+</html>
