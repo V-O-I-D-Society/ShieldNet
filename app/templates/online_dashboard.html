@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>{{ title or "ShieldNet | Online Transfer" }}</title>
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
   <style>
 /* ===== BASE ===== */
 body {
@@ -114,7 +115,7 @@ header {
 #drop-zone.dragover { background: rgba(0,255,255,0.15); border-color: #00ffff; }
 #file-names { margin-top: 10px; color: #b8e3ff; font-size: 0.9rem; }
 
-/* ===== PARTICIPANTS JOIN ANIMATION ===== */
+/* ===== PARTICIPANTS ===== */
 #participants li {
   list-style: none; padding: 6px 0; color: #bdeeff;
   transition: 0.3s; opacity: 0.85;
@@ -127,22 +128,8 @@ header {
   100% { opacity: 1; transform: translateX(0); color: #bdeeff; }
 }
 
-/* ===== COUNTDOWN BAR ===== */
-#timeout-progress {
-  width: 70%; height: 8px; margin: 10px auto;
-  background: rgba(255,255,255,0.1);
-  border-radius: 5px; overflow: hidden; display: none;
-}
-#timeout-bar {
-  height: 100%; width: 100%;
-  background: linear-gradient(90deg, #00ffff, #007bff);
-  transition: width 1s linear;
-}
-
 /* ===== TOAST ===== */
-.toast-container {
-  position: fixed; bottom: 25px; right: 25px; z-index: 9999;
-}
+.toast-container { position: fixed; bottom: 25px; right: 25px; z-index: 9999; }
 .toast {
   background: rgba(0,255,255,0.15);
   border-left: 4px solid #00ffff;
@@ -155,6 +142,21 @@ header {
 .toast.fade-out { animation: fadeOut 0.6s forwards; }
 @keyframes fadeOut { to { opacity: 0; transform: translateX(50px); } }
 
+/* ===== TIMEOUT BAR ===== */
+#timeout-progress {
+  display: none;
+  width: 90%;
+  height: 8px;
+  margin-top: 10px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 5px;
+}
+#timeout-bar {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #00ffff, #007bff);
+}
+
 /* ===== FOOTER ===== */
 .footer-text {
   position: fixed; bottom: 10px; width: 100%;
@@ -163,12 +165,15 @@ header {
 }
   </style>
 </head>
+
 <body>
+
 <header>
   <div class="nav-left">
-    <img src="{{ url_for('static', filename='logo.png') }}" alt="ShieldNet Logo">
+    <img src="{{ url_for('static', filename='images/shieldnet.jpeg') }}" alt="ShieldNet Logo">
     <h1>SHIELDNET</h1>
   </div>
+
   <div class="profile-menu" id="profileMenu">
     <div class="profile-icon">👤</div>
     <div class="dropdown-content">
@@ -180,147 +185,285 @@ header {
 </header>
 
 <div class="info-banner">
-  ✅ Session created successfully. Share this token with receivers:
+  ✅ Session created successfully. Share this token:
   <strong id="token-text">{{ token }}</strong>
   <button class="copy-btn" id="copy-btn">Copy</button>
 </div>
 
-<!-- Countdown bar -->
-<div id="timeout-progress">
-  <div id="timeout-bar"></div>
-</div>
-
 <div class="container">
-  <!-- LEFT SIDE -->
+  <!-- LEFT -->
   <div class="card">
     <h3>Session: <span id="session-token">{{ token }}</span></h3>
-    <p class="small">Owner: {{ owner_name }}</p>
+    <p>Owner: {{ owner_name }}</p>
+
     <h4>Upload Files</h4>
-    <div id="drop-zone">Drag & Drop files here or click to select</div>
+    <div id="drop-zone">Drag & Drop files or click</div>
     <input type="file" id="file-input" multiple style="display:none;">
     <div id="file-names"></div>
+
     <button id="upload-btn" class="copy-btn" style="margin-top:15px;">Upload</button>
-    <div id="progress-wrap" style="display:none;margin-top:8px;">
+
+    <div id="progress-wrap" style="display:none;margin-top:10px;">
       <progress id="upload-progress" value="0" max="100"></progress>
       <div id="progress-text"></div>
     </div>
-    <h4 style="margin-top:20px;">Files</h4>
-    <ul id="file-list"></ul>
+
+    <h4 style="margin-top:25px;">Files</h4>
+    <ul id="file-list">
+      {% for f in files %}
+        <li>
+          📄 {{ f }} —
+          <a href="/online/download/{{ token }}/{{ f }}" style="color:#00eaff;">Download</a>
+        </li>
+      {% endfor %}
+    </ul>
   </div>
 
-  <!-- RIGHT SIDE -->
+  <!-- RIGHT -->
   <div class="card">
     <h4>Participants (<span id="pcount">{{ participants|length }}</span>)</h4>
     <ul id="participants">
       {% for p in participants %}
-        <li>{{ p }}</li>
+      <li>{{ p }}</li>
       {% endfor %}
     </ul>
 
     {% if is_owner %}
-    <h5 style="margin-top:20px;">Session Controls</h5>
-    <button id="end-btn" class="copy-btn" style="background:#ff0055;">End Session</button>
-    <button id="set-timeout" class="copy-btn">Set Auto Timeout</button>
+    <button id="end-btn" class="copy-btn" style="background:#ff0044;">End Session</button>
+
+    <!-- ⭐ AUTO TIMEOUT RESTORED -->
+    <button id="set-timeout" class="copy-btn" style="margin-top:10px;">Set Auto Timeout</button>
+
     <div id="timeout-box" style="display:none;margin-top:10px;">
-      <input id="timeout-min" type="number" min="1" placeholder="Minutes" style="padding:6px;border-radius:6px;">
-      <button id="apply-timeout" class="copy-btn">Apply</button>
+        <input id="timeout-min" type="number" min="1" placeholder="Minutes"
+               style="padding:6px;border-radius:6px;width:120px;">
+        <button id="apply-timeout" class="copy-btn">Apply</button>
+    </div>
+
+    <div id="timeout-progress">
+        <div id="timeout-bar"></div>
     </div>
     {% endif %}
   </div>
 </div>
 
 <p class="footer-text">© 2025 ShieldNet | Developed by Team CyberWarriors</p>
+
 <div class="toast-container" id="toast-container"></div>
 
 <script>
-const token="{{token}}";const socket=io();let selectedFiles=[];let timeoutInterval;
-socket.emit('join_room',{token:token,user:"{{current_user.username}}"});
+const token = "{{ token }}";
+const socket = io();
+let selectedFiles = [];
 
-// Toast
-function showToast(msg){const c=document.getElementById('toast-container');
-const t=document.createElement('div');t.className='toast';t.textContent=msg;
-c.appendChild(t);setTimeout(()=>t.classList.add('fade-out'),2500);
-setTimeout(()=>t.remove(),3100);}
-
-// Copy Token
-document.getElementById("copy-btn").addEventListener("click",()=>{
-navigator.clipboard.writeText(document.getElementById("token-text").textContent.trim());
-showToast("Token copied 📋");});
-
-// Drag & Drop
-const drop=document.getElementById("drop-zone"),input=document.getElementById("file-input"),names=document.getElementById("file-names");
-drop.addEventListener("click",()=>input.click());
-input.addEventListener("change",e=>addFiles(e.target.files));
-drop.addEventListener("dragover",e=>{e.preventDefault();drop.classList.add("dragover");});
-drop.addEventListener("dragleave",()=>drop.classList.remove("dragover"));
-drop.addEventListener("drop",e=>{e.preventDefault();drop.classList.remove("dragover");addFiles(e.dataTransfer.files);});
-function addFiles(f){selectedFiles.push(...Array.from(f));names.innerHTML=selectedFiles.map(x=>"📄 "+x.name).join("<br>");}
-
-// Upload
-document.getElementById("upload-btn").addEventListener("click",()=>{
-if(!selectedFiles.length)return showToast("Select files first ⚠️");uploadFiles(selectedFiles);});
-function uploadFiles(files){
-const total=files.length;let uploaded=0;
-const p=document.getElementById("upload-progress"),w=document.getElementById("progress-wrap"),t=document.getElementById("progress-text");
-w.style.display="block";p.value=0;
-files.forEach(file=>{
-const fd=new FormData();fd.append("file",file);
-const xhr=new XMLHttpRequest();xhr.open("POST",`/online/upload/${token}`,true);
-xhr.onload=()=>{if(xhr.status===200){uploaded++;const pct=Math.round((uploaded/total)*100);
-p.value=pct;t.textContent=pct+"%";addFileToList(file.name);
-if(uploaded===total){showToast("All files uploaded ✅");w.style.display="none";selectedFiles=[];names.innerHTML="";}}};
-xhr.send(fd);});}
-function addFileToList(f){const li=document.createElement("li");li.innerHTML=f+' — <a href="/online/download/'+token+'/'+encodeURIComponent(f)+'" style="color:#00eaff;">Download</a>';
-document.getElementById("file-list").appendChild(li);}
-
-// Participants FIXED ✅
-socket.on('participants_update',data=>{
-const ul=document.getElementById('participants');
-const existing=Array.from(ul.children).map(li=>li.textContent);
-ul.innerHTML='';
-data.participants.forEach(p=>{
-const li=document.createElement('li');
-li.textContent=p;
-if(!existing.includes(p)){li.classList.add('new-join');}
-ul.appendChild(li);
-});
-document.getElementById('pcount').textContent=data.participants.length;
+/* ⭐ FIXED: ROOM JOIN AFTER CONNECT */
+socket.on("connect", () => {
+  socket.emit("join_room", { token: token, user: "{{ current_user.username }}" });
 });
 
-// Timeout Countdown
-document.getElementById('set-timeout')?.addEventListener('click',()=>document.getElementById('timeout-box').style.display='block');
-document.getElementById('apply-timeout')?.addEventListener('click',async()=>{
-const mins=document.getElementById('timeout-min').value;if(!mins)return showToast("Enter minutes ⏱️");
-const fd=new FormData();fd.append('minutes',mins);
-const res=await fetch('/online/set_auto_expire/'+token,{method:'POST',body:fd});
-const js=await res.json();if(js.status==='ok'){showToast("Auto timeout set for "+mins+"m ⏰");
-startCountdown(mins*60);}});
-
-function startCountdown(seconds){
-clearInterval(timeoutInterval);
-const bar=document.getElementById('timeout-progress');
-const inner=document.getElementById('timeout-bar');
-bar.style.display='block';
-let remaining=seconds;
-timeoutInterval=setInterval(()=>{
-remaining--;const pct=(remaining/seconds)*100;
-inner.style.width=pct+"%";
-if(remaining<=0){clearInterval(timeoutInterval);
-bar.style.display='none';showToast("Session expired ⏳");
-window.location="{{ url_for('online_transfer.select_mode') }}";}
-},1000);
+/* Toast */
+function showToast(msg) {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.classList.add('fade-out'), 2500);
+  setTimeout(() => t.remove(), 3200);
 }
 
-// End Session
-document.getElementById('end-btn')?.addEventListener('click',async()=>{
-if(!confirm('End session and delete files?'))return;
-const res=await fetch('/online/end/'+token,{method:'POST'});
-const js=await res.json();if(js.status==='ended')showToast("Session ended 🛑");
-setTimeout(()=>window.location="{{ url_for('online_transfer.select_mode') }}",1500);});
+/* Copy button */
+document.getElementById("copy-btn")
+.addEventListener("click", () => {
+  navigator.clipboard.writeText(document.getElementById("token-text").textContent);
+  showToast("Token copied 📋");
+});
 
-// Profile Menu
-document.querySelector('.profile-icon').addEventListener('click',()=>document.getElementById('profileMenu').classList.toggle('active'));
-document.addEventListener('click',e=>{const m=document.getElementById('profileMenu');if(!m.contains(e.target))m.classList.remove('active');});
+/* Drag & drop */
+const drop = document.getElementById("drop-zone");
+const input = document.getElementById("file-input");
+const names = document.getElementById("file-names");
+
+drop.addEventListener("click", () => input.click());
+drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("dragover"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("dragover"));
+drop.addEventListener("drop", e => {
+  e.preventDefault();
+  drop.classList.remove("dragover");
+  addFiles(e.dataTransfer.files);
+});
+input.addEventListener("change", e => addFiles(e.target.files));
+
+function addFiles(f) {
+  selectedFiles.push(...Array.from(f));
+  names.innerHTML = selectedFiles.map(x => "📄 " + x.name).join("<br>");
+}
+
+/* Upload */
+document.getElementById("upload-btn")
+.addEventListener("click", () => {
+  if (!selectedFiles.length) return showToast("Select files first ⚠️");
+  uploadFiles(selectedFiles);
+});
+
+function uploadFiles(files) {
+  const total = files.length;
+  let uploaded = 0;
+  const p = document.getElementById("upload-progress");
+  const wrap = document.getElementById("progress-wrap");
+  const txt = document.getElementById("progress-text");
+
+  wrap.style.display = "block";
+  p.value = 0;
+
+  files.forEach(file => {
+    const fd = new FormData();
+    fd.append("file", file);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `/online/upload/${token}`);
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        uploaded++;
+        const pct = Math.round((uploaded / total) * 100);
+        p.value = pct;
+        txt.textContent = pct + "%";
+        addFileToList(file.name);
+
+        if (uploaded === total) {
+          showToast("All files uploaded ✔️");
+          wrap.style.display = "none";
+          selectedFiles = [];
+          names.innerHTML = "";
+        }
+      }
+    };
+
+    xhr.send(fd);
+  });
+}
+
+/* Add file to local list */
+function addFileToList(f) {
+  const ul = document.getElementById("file-list");
+  const li = document.createElement("li");
+  li.innerHTML =
+    "📄 " + f +
+    ' — <a href="/online/download/' + token + '/' + encodeURIComponent(f) + '" style="color:#00eaff;">Download</a>';
+  ul.appendChild(li);
+}
+
+/* ⭐ FILE ADDED REAL-TIME FIX */
+socket.on("file_added", data => {
+  if (!data || !data.filename) return;
+
+  const list = document.getElementById("file-list");
+  const exists = Array.from(list.children)
+    .some(li => li.textContent.includes(data.filename));
+
+  if (exists) return;
+
+  const li = document.createElement("li");
+  li.innerHTML =
+    "📄 " + data.filename +
+    ' — <a href="/online/download/' + token + '/' +
+    encodeURIComponent(data.filename) +
+    '" style="color:#00eaff;">Download</a> ' +
+    '<span style="font-size:12px;color:gray;">(' + data.uploader + ')</span>';
+
+  list.appendChild(li);
+});
+
+/* Participants update */
+socket.on("participants_update", data => {
+  const ul = document.getElementById("participants");
+
+  const existing = Array.from(ul.children).map(li => li.textContent);
+  ul.innerHTML = "";
+
+  data.participants.forEach(p => {
+    const li = document.createElement("li");
+    li.textContent = p;
+
+    if (!existing.includes(p)) li.classList.add("new-join");
+    ul.appendChild(li);
+  });
+
+  document.getElementById("pcount").textContent = data.participants.length;
+});
+
+/* =================== AUTO TIMEOUT RESTORED ===================== */
+document.getElementById('set-timeout')?.addEventListener('click', () => {
+    document.getElementById('timeout-box').style.display = 'block';
+});
+
+document.getElementById('apply-timeout')?.addEventListener('click', async () => {
+    const mins = document.getElementById('timeout-min').value;
+    if (!mins) return showToast("Enter minutes ⏱️");
+
+    const fd = new FormData();
+    fd.append("minutes", mins);
+
+    const res = await fetch('/online/set_auto_expire/' + token, {
+        method: 'POST',
+        body: fd
+    });
+
+    const js = await res.json();
+    if (js.status === 'ok') {
+        showToast("Auto timeout set for " + mins + "m ⏳");
+        startCountdown(mins * 60);
+    }
+});
+
+let timeoutInterval;
+function startCountdown(seconds) {
+    clearInterval(timeoutInterval);
+
+    const bar = document.getElementById('timeout-progress');
+    const inner = document.getElementById('timeout-bar');
+
+    bar.style.display = 'block';
+
+    let remaining = seconds;
+
+    timeoutInterval = setInterval(() => {
+        remaining--;
+        const pct = (remaining / seconds) * 100;
+        inner.style.width = pct + "%";
+
+        if (remaining <= 0) {
+            clearInterval(timeoutInterval);
+            showToast("Session expired ⏳");
+            window.location = "{{ url_for('online_transfer.select_mode') }}";
+        }
+    }, 1000);
+}
+
+/* End session */
+document.getElementById("end-btn")?.addEventListener("click", async () => {
+  if (!confirm("End session? Files will be deleted.")) return;
+  const res = await fetch(`/online/end/${token}`, { method: "POST" });
+  const js = await res.json();
+
+  if (js.status === "ended") showToast("Session ended 🛑");
+
+  setTimeout(() => {
+    window.location = "{{ url_for('online_transfer.select_mode') }}";
+  }, 1400);
+});
+
+/* Profile menu */
+document.querySelector('.profile-icon')
+.addEventListener('click', () => {
+  document.getElementById('profileMenu').classList.toggle('active');
+});
+document.addEventListener('click', e => {
+  const m = document.getElementById('profileMenu');
+  if (!m.contains(e.target)) m.classList.remove('active');
+});
 </script>
+
 </body>
 </html>
