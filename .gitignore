@@ -29,3 +29,4 @@ Thumbs.db
 
 __cache__/
 .cache/
+app_render.py
